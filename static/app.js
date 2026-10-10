@@ -1,4 +1,4 @@
-/* Haunts — your favorite places, on a map. Data lives in data/places.json via the local server. */
+/* Keepers — your favorite places, on a map. Data lives in data/places.json via the local server. */
 (() => {
   "use strict";
 
@@ -71,7 +71,7 @@
         $("#saveState").textContent = "Saved";
         setTimeout(() => { if ($("#saveState").textContent === "Saved") $("#saveState").textContent = ""; }, 1800);
       } catch {
-        $("#saveState").textContent = "Not saved — is Haunts running?";
+        $("#saveState").textContent = "Not saved — is Keepers running?";
       }
     }, 250);
   }
@@ -490,7 +490,7 @@
       case "menuBtn": { const m = $("#menu"); m.hidden = !m.hidden; t.setAttribute("aria-expanded", !m.hidden); return; }
       case "exportBtn": {
         const blob = new Blob([JSON.stringify({ version: 1, exported: new Date().toISOString(), places }, null, 1)], { type: "application/json" });
-        const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `haunts-${today()}.json` });
+        const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `keepers-${today()}.json` });
         a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
         $("#menu").hidden = true; return;
       }
@@ -533,7 +533,7 @@
       places = [...byId.values()];
       persist(); render(); fitAll();
       $("#saveState").textContent = `Imported ${incoming.length}`;
-    } catch { $("#saveState").textContent = "That file isn't a Haunts backup"; }
+    } catch { $("#saveState").textContent = "That file isn't a Keepers backup"; }
     e.target.value = ""; $("#menu").hidden = true;
   });
 
@@ -553,7 +553,7 @@
       const r = await fetch("/api/places");
       places = (await r.json()).places || [];
     } catch {
-      $("#saveState").textContent = "Can't reach Haunts — start it with Haunts.command";
+      $("#saveState").textContent = "Can't reach Keepers — start it with Keepers.command";
     }
     render();
     if (places.length) fitAll();

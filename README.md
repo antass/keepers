@@ -1,6 +1,6 @@
-# Haunts — your favorite places, on one map
+# Keepers — your favorite places, on one map
 
-**Start it:** double-click `Haunts.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
+**Start it:** double-click `Keepers.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
 
 **On your phone:** same Wi-Fi, open the address the Terminal window prints (e.g. `http://<your-mac>.local:8142`), then Share → Add to Home Screen.
 

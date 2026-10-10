@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Haunts — a map of your favorite places. Stdlib only.
+"""Keepers — a map of your favorite places. Stdlib only.
 
   python3 server.py            # http://localhost:8142
   python3 server.py --lan      # also reachable from phone/iPad on the same Wi-Fi
@@ -13,7 +13,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(ROOT, "static")
 DATA_DIR = os.path.join(ROOT, "data")
 DB = os.path.join(DATA_DIR, "places.json")
-UA = "Haunts/1.0 (personal places tracker)"
+UA = "Keepers/1.0 (personal places tracker)"
 LOCK = threading.Lock()
 
 
@@ -97,7 +97,7 @@ def main():
     host = "0.0.0.0" if lan else "127.0.0.1"
     srv = ThreadingHTTPServer((host, PORT), Handler)
     url = f"http://localhost:{PORT}"
-    print(f"Haunts is running at {url}")
+    print(f"Keepers is running at {url}")
     if lan:
         print(f"On your phone (same Wi-Fi): http://{socket.gethostname()}:{PORT}")
     print("Leave this window open. Press Ctrl+C to stop.")

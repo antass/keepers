@@ -1,5 +1,5 @@
 #!/bin/bash
-# Double-click to start Haunts. Opens your browser; leave this window open while you use it.
+# Double-click to start Keepers. Opens your browser; leave this window open while you use it.
 cd "$(dirname "$0")"
 if lsof -i :8142 -sTCP:LISTEN >/dev/null 2>&1; then
   open "http://localhost:8142"
