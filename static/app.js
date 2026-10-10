@@ -4,17 +4,17 @@
 
   // ---------- Categories ----------
   const CATS = {
-    restaurant: { label: "Restaurant", color: "#C8414F", icon: "M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 0-3 2-3 5v4h3M17 3v18" },
-    cafe:       { label: "Café",       color: "#8A5A3B", icon: "M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v3M12 3v3" },
-    bar:        { label: "Bar",        color: "#6A4C93", icon: "M4 4h16l-8 9zM12 13v7M8 20h8" },
-    bakery:     { label: "Bakery",     color: "#D9772B", icon: "M4 15c0-5 4-8 8-8s8 3 8 8v3H4zM9 10v5M15 10v5M12 9v6" },
-    museum:     { label: "Museum",     color: "#1F7A8C", icon: "M3 9l9-5 9 5M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18" },
-    library:    { label: "Library",    color: "#2F5A8F", icon: "M4 4h4v16H4zM9 4h4v16H9zM14.5 5.2l3.8-1 3.5 14.6-3.8 1z" },
-    bookstore:  { label: "Bookstore",  color: "#B07A0C", icon: "M3 5c3-1 6 0 9 2 3-2 6-3 9-2v14c-3-1-6 0-9 2-3-2-6-3-9-2zM12 7v14" },
-    park:       { label: "Park",       color: "#3A7D44", icon: "M12 3l6 8h-4l5 6H5l5-6H6zM12 17v4" },
-    shop:       { label: "Shop",       color: "#A8467A", icon: "M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2" },
-    venue:      { label: "Venue",      color: "#7A3B2E", icon: "M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" },
-    other:      { label: "Other",      color: "#5C6A64", icon: "M12 21s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12zM12 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" },
+    restaurant: { label: "Restaurant", color: "#D0573F", icon: "M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 0-3 2-3 5v4h3M17 3v18" },
+    cafe:       { label: "Café",       color: "#8B6142", icon: "M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v3M12 3v3" },
+    bar:        { label: "Bar",        color: "#86507F", icon: "M4 4h16l-8 9zM12 13v7M8 20h8" },
+    bakery:     { label: "Bakery",     color: "#D9963A", icon: "M4 15c0-5 4-8 8-8s8 3 8 8v3H4zM9 10v5M15 10v5M12 9v6" },
+    museum:     { label: "Museum",     color: "#2E8783", icon: "M3 9l9-5 9 5M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18" },
+    library:    { label: "Library",    color: "#4C70A0", icon: "M4 4h4v16H4zM9 4h4v16H9zM14.5 5.2l3.8-1 3.5 14.6-3.8 1z" },
+    bookstore:  { label: "Bookstore",  color: "#7F8A2C", icon: "M3 5c3-1 6 0 9 2 3-2 6-3 9-2v14c-3-1-6 0-9 2-3-2-6-3-9-2zM12 7v14" },
+    park:       { label: "Park",       color: "#4A9A4C", icon: "M12 3l6 8h-4l5 6H5l5-6H6zM12 17v4" },
+    shop:       { label: "Shop",       color: "#C76A8A", icon: "M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2" },
+    venue:      { label: "Venue",      color: "#A05238", icon: "M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" },
+    other:      { label: "Other",      color: "#7D857A", icon: "M12 21s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12zM12 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" },
   };
   // OpenStreetMap tag value → our category (used when you pick a search result)
   const OSM_CAT = {
@@ -112,11 +112,17 @@
     }
   }
 
+  const panelPad = () => window.innerWidth > 760 ? document.getElementById("panel").offsetWidth + 32 : 0;
+  function focusOn(lat, lon, zoom) {
+    const z = zoom ?? map.getZoom();
+    const pt = map.project([lat, lon], z).subtract([panelPad() / 2, 0]);
+    map.setView(map.unproject(pt, z), z, { animate: true });
+  }
   function fitAll() {
     const pts = filtered().map((p) => [p.lat, p.lon]);
     if (!pts.length) return;
-    if (pts.length === 1) map.setView(pts[0], 15);
-    else map.fitBounds(pts, { padding: [50, 50], maxZoom: 15 });
+    if (pts.length === 1) focusOn(pts[0][0], pts[0][1], 15);
+    else map.fitBounds(pts, { paddingTopLeft: [panelPad() + 40, 80], paddingBottomRight: [50, 50], maxZoom: 15 });
   }
 
   // ---------- Filtering ----------
@@ -287,7 +293,7 @@
     show("detail");
     renderList();
     if (p) {
-      if (pan || !map.getBounds().contains([p.lat, p.lon])) map.setView([p.lat, p.lon], Math.max(map.getZoom(), 15), { animate: true });
+      if (pan || !map.getBounds().contains([p.lat, p.lon])) focusOn(p.lat, p.lon, Math.max(map.getZoom(), 15));
     }
   }
 
@@ -354,7 +360,7 @@
       });
     } else draftMarker.setLatLng([lat, lon]);
     draftMarker.setIcon(pinIcon(draft.category, "active"));
-    if (pan) map.setView([lat, lon], Math.max(map.getZoom(), 16));
+    if (pan) focusOn(lat, lon, Math.max(map.getZoom(), 16));
     $("#pinHint").hidden = true;
     renderEditBits();
     syncMarkers(filtered());
