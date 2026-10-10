@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haunts</title>
+<meta name="theme-color" content="#0F6B5A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="panel" id="panel">
+    <header class="brand">
+      <div class="brand-row">
+        <h1>Haunts</h1>
+        <div class="brand-actions">
+          <span class="save-state" id="saveState" aria-live="polite"></span>
+          <button class="icon-btn" id="menuBtn" aria-label="Import and export" aria-expanded="false">
+            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+          </button>
+          <div class="menu" id="menu" hidden>
+            <button id="exportBtn">Export backup (.json)</button>
+            <label class="menu-file">Import backup…<input type="file" id="importInput" accept="application/json,.json"></label>
+          </div>
+        </div>
+      </div>
+      <p class="stats" id="stats"></p>
+    </header>
+
+    <!-- LIST VIEW -->
+    <section class="view" id="listView">
+      <div class="filters">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          <input id="q" type="search" placeholder="Search your places, notes, tags" autocomplete="off">
+        </div>
+        <div class="chips" id="catChips"></div>
+        <div class="chips tag-chips" id="tagChips"></div>
+        <div class="filter-row">
+          <label class="select">
+            <span>Sort</span>
+            <select id="sort">
+              <option value="rating">Top rated</option>
+              <option value="recent">Recently visited</option>
+              <option value="visits">Most visited</option>
+              <option value="name">A–Z</option>
+              <option value="near">Nearest to map center</option>
+            </select>
+          </label>
+          <label class="select">
+            <span>Rating</span>
+            <select id="minRating">
+              <option value="0">Any</option>
+              <option value="3">3★ +</option>
+              <option value="4">4★ +</option>
+              <option value="5">5★ only</option>
+            </select>
+          </label>
+          <button class="toggle" id="returnOnly" aria-pressed="false">Want to go back</button>
+          <button class="toggle" id="inView" aria-pressed="false">In map view</button>
+        </div>
+      </div>
+      <div class="example-banner" id="exampleBanner" hidden>
+        <span>You're looking at example places.</span>
+        <button id="clearExamples">Remove examples</button>
+      </div>
+      <ul class="cards" id="cards"></ul>
+      <div class="empty" id="empty" hidden></div>
+    </section>
+
+    <!-- DETAIL VIEW -->
+    <section class="view" id="detailView" hidden></section>
+
+    <!-- EDIT VIEW -->
+    <section class="view" id="editView" hidden>
+      <div class="view-head">
+        <button class="back" data-back>← Back</button>
+        <h2 id="editTitle">Add a place</h2>
+      </div>
+      <form id="editForm" novalidate>
+        <div class="finder" id="finder">
+          <label for="lookup" class="lbl">Find it</label>
+          <div class="search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            <input id="lookup" type="search" placeholder="Name or address, e.g. Myopic Books" autocomplete="off">
+          </div>
+          <p class="hint">Or tap the map to drop a pin. Drag the pin to fine-tune.</p>
+          <ul class="results" id="results"></ul>
+        </div>
+
+        <div class="field">
+          <label for="f-name" class="lbl">Name</label>
+          <input id="f-name" required maxlength="120">
+        </div>
+        <div class="field">
+          <span class="lbl">Type</span>
+          <div class="chips" id="f-cats" role="radiogroup" aria-label="Type"></div>
+        </div>
+        <div class="field two">
+          <div>
+            <span class="lbl">Rating</span>
+            <div class="stars input" id="f-rating" role="radiogroup" aria-label="Rating"></div>
+          </div>
+          <div>
+            <span class="lbl">Price</span>
+            <div class="price input" id="f-price" role="radiogroup" aria-label="Price"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-address" class="lbl">Address</label>
+          <input id="f-address" maxlength="200">
+          <p class="coords" id="f-coords">No pin yet</p>
+        </div>
+        <div class="field">
+          <label for="f-tag" class="lbl">Tags</label>
+          <div class="tag-input" id="tagBox">
+            <span id="f-tags"></span>
+            <input id="f-tag" placeholder="kid-friendly, date night…" list="tagList" autocomplete="off">
+            <datalist id="tagList"></datalist>
+          </div>
+          <div class="chips suggest" id="tagSuggest"></div>
+        </div>
+        <div class="field">
+          <label for="f-notes" class="lbl">Notes</label>
+          <textarea id="f-notes" rows="5" placeholder="What to order, best table, who you went with, when it's quiet…"></textarea>
+        </div>
+        <div class="field">
+          <span class="lbl">Visits</span>
+          <div class="visits-edit" id="f-visits"></div>
+          <div class="add-visit">
+            <input type="date" id="f-visit-date" aria-label="Visit date">
+            <button type="button" class="btn ghost" id="f-add-visit">Add visit</button>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="f-return"> I want to go back
+        </label>
+        <p class="form-error" id="formError" role="alert"></p>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Save place</button>
+          <button type="button" class="btn ghost" data-back>Cancel</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button>
+        </div>
+        <div class="confirm" id="confirmDelete" hidden>
+          <span>Delete this place for good?</span>
+          <button type="button" class="btn danger" id="confirmYes">Delete</button>
+          <button type="button" class="btn ghost" id="confirmNo">Keep it</button>
+        </div>
+      </form>
+    </section>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map" aria-label="Map of your places"></div>
+    <div class="map-tools">
+      <button class="btn primary add-btn" id="addBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add place
+      </button>
+      <button class="icon-btn map-btn" id="locateBtn" aria-label="Center on my location">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+      <button class="icon-btn map-btn" id="fitBtn" aria-label="Show all places">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+    <div class="pin-hint" id="pinHint" hidden>Tap the map to drop a pin</div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
