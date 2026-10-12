@@ -77,7 +77,7 @@
   }
 
   // ---------- Map ----------
-  const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([41.8881, -87.6298], 12);
+  const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([42.3601, -71.0589], 13);
   L.control.zoom({ position: "bottomright" }).addTo(map);
   // OpenStreetMap tiles; dark mode tints them via CSS (.leaflet-tile-pane filter)
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
