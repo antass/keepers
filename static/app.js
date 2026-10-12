@@ -184,7 +184,6 @@
 
   function renderList() {
     const list = filtered();
-    $("#exampleBanner").hidden = !places.some((p) => p.example);
     $("#cards").innerHTML = list.map((p) => {
       const lv = lastVisit(p), n = p.visits?.length || 0;
       const meta = [CATS[p.category]?.label, p.city || p.address?.split(",")[0], price(p.price)].filter(Boolean).join(" · ");
@@ -207,8 +206,7 @@
       empty.hidden = false;
       empty.innerHTML = `<h3>Start your map</h3>
         <p>Add a restaurant, café, museum or bookstore you love. Rate it, tag it, and jot down what to order next time.</p>
-        <div class="row"><button class="btn primary" id="emptyAdd">Add your first place</button>
-        <button class="btn ghost" id="loadExamples">Show example places</button></div>`;
+        <div class="row"><button class="btn primary" id="emptyAdd">Add your first place</button></div>`;
     } else if (!list.length) {
       empty.hidden = false;
       empty.innerHTML = `<h3>Nothing matches</h3><p>No places fit these filters.</p><div class="row"><button class="btn ghost" id="clearFilters">Clear filters</button></div>`;
@@ -486,8 +484,6 @@
         places = places.filter((p) => p.id !== draft.id);
         draft = null; persist(); show("list"); return;
       }
-      case "loadExamples": places = EXAMPLES.map((p) => ({ ...p, id: uid() + p.id, example: true, created: Date.now() })); persist(); render(); fitAll(); return;
-      case "clearExamples": places = places.filter((p) => !p.example); persist(); show("list"); return;
       case "clearFilters": f.q = ""; $("#q").value = ""; f.cats.clear(); f.tags.clear(); f.minRating = 0; $("#minRating").value = "0"; f.returnOnly = false; f.inView = false; return render();
       case "returnOnly": f.returnOnly = !f.returnOnly; return render();
       case "inView": f.inView = !f.inView; return render();
@@ -542,16 +538,6 @@
     } catch { $("#saveState").textContent = "That file isn't a Keepers backup"; }
     e.target.value = ""; $("#menu").hidden = true;
   });
-
-  // ---------- Examples (clearly marked, removable) ----------
-  const EXAMPLES = [
-    { id: "a", name: "The Art Institute of Chicago", category: "museum", lat: 41.8796, lon: -87.6237, address: "111 S Michigan Ave, Chicago, IL", city: "Chicago", rating: 5, price: 3, tags: ["rainy day", "bring visitors", "kid-friendly"], notes: "Thorne Miniature Rooms are the kids' favorite.\nGo Thursday evening for fewer crowds.", visits: ["2026-03-14", "2026-07-02", "2026-09-20"], wantToReturn: true },
-    { id: "b", name: "Harold Washington Library Center", category: "library", lat: 41.8763, lon: -87.6282, address: "400 S State St, Chicago, IL", city: "Chicago", rating: 4, price: 0, tags: ["quiet", "work-friendly", "kid-friendly"], notes: "Winter Garden on the 9th floor is the best reading spot.", visits: ["2026-08-11"], wantToReturn: true },
-    { id: "c", name: "Myopic Books", category: "bookstore", lat: 41.9097, lon: -87.6775, address: "1564 N Milwaukee Ave, Chicago, IL", city: "Chicago", rating: 5, price: 1, tags: ["used books", "rainy day"], notes: "Three floors. Poetry upstairs.", visits: ["2026-05-03", "2026-09-28"], wantToReturn: true },
-    { id: "d", name: "The Violet Hour", category: "bar", lat: 41.9087, lon: -87.6773, address: "1520 N Damen Ave, Chicago, IL", city: "Chicago", rating: 4, price: 3, tags: ["date night", "cocktails"], notes: "Unmarked door. Arrive before 8 to skip the line.", visits: ["2026-02-14"], wantToReturn: false },
-    { id: "e", name: "Lula Cafe", category: "restaurant", lat: 41.9271, lon: -87.7072, address: "2537 N Kedzie Blvd, Chicago, IL", city: "Chicago", rating: 5, price: 2, tags: ["brunch", "date night"], notes: "Order the seasonal pasta. Monday farm dinner is worth booking.", visits: ["2026-04-19", "2026-06-07", "2026-08-30", "2026-10-04"], wantToReturn: true },
-    { id: "f", name: "Garfield Park Conservatory", category: "park", lat: 41.8863, lon: -87.7173, address: "300 N Central Park Ave, Chicago, IL", city: "Chicago", rating: 5, price: 0, tags: ["kid-friendly", "rainy day", "free"], notes: "Warm in January. The Fern Room feels like another planet.", visits: ["2026-01-18"], wantToReturn: true },
-  ];
 
   // ---------- Boot ----------
   (async () => {

@@ -1,5 +1,10 @@
 # Keepers — your favorite places, on one map
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <img alt="Keepers: a list of favorite Chicago places with ratings and tags beside a map of color-coded pins" src="docs/screenshot.png">
+</picture>
+
 **Start it:** double-click `Keepers.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
 
 **On your phone:** same Wi-Fi, open the address the Terminal window prints (e.g. `http://<your-mac>.local:8142`), then Share → Add to Home Screen.
