@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
-  <img alt="Keepers: a list of favorite Chicago places with ratings and tags beside a map of color-coded pins" src="docs/screenshot.png">
+  <img alt="Keepers: a list of favorite Boston places with ratings and tags beside a map of color-coded pins" src="docs/screenshot.png">
 </picture>
 
 **Start it:** double-click `Keepers.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
