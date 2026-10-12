@@ -5,7 +5,7 @@
   python3 server.py --lan      # also reachable from phone/iPad on the same Wi-Fi
   python3 server.py --open     # open the browser on start
 """
-import json, os, socket, sys, threading, urllib.parse, urllib.request, webbrowser
+import json, os, shutil, socket, sys, threading, time, urllib.parse, urllib.request, webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 PORT = 8142
@@ -13,6 +13,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(ROOT, "static")
 DATA_DIR = os.path.join(ROOT, "data")
 DB = os.path.join(DATA_DIR, "places.json")
+BACKUPS = os.path.join(DATA_DIR, "backups")
 UA = "Keepers/1.0 (personal places tracker)"
 LOCK = threading.Lock()
 
@@ -29,6 +30,11 @@ def save(doc):
     os.makedirs(DATA_DIR, exist_ok=True)
     with LOCK:
         if os.path.exists(DB):
+            # Rolling history: data/backups/places-<timestamp>.json, newest 50 kept
+            os.makedirs(BACKUPS, exist_ok=True)
+            shutil.copy2(DB, os.path.join(BACKUPS, time.strftime("places-%Y%m%d-%H%M%S.json")))
+            for old in sorted(os.listdir(BACKUPS))[:-50]:
+                os.remove(os.path.join(BACKUPS, old))
             os.replace(DB, DB + ".bak")  # one-step undo if something goes wrong
         tmp = DB + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:

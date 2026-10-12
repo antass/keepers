@@ -89,6 +89,17 @@ h2 { font: 400 25px/1.15 var(--display); margin: 0; text-wrap: balance; }
 .map-btn { background: var(--panel); box-shadow: var(--shadow-sm); width: 44px; height: 44px; }
 .map-btn circle { fill: none; stroke: currentColor; }
 
+/* Been / Want to go */
+.tabs { display: flex; gap: 4px; background: var(--sunk); border-radius: 999px; padding: 4px; margin-top: 14px; }
+.tab { flex: 1; border: 0; background: none; padding: 8px 10px; border-radius: 999px; font-weight: 800; font-size: 14px; color: var(--muted); display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: background .15s, color .15s; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"], .tab[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow-sm); }
+.tab[aria-selected="true"] .n { color: inherit; opacity: .75; }
+.tab .n { font: 500 12px var(--mono); color: var(--muted); }
+.tabs.status { margin-top: 0; }
+.tab-want #listView .been-only, .is-want .been-only { display: none !important; }
+.want-flag { font-size: 12px; font-weight: 800; color: var(--accent-deep); padding: 3px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--accent); }
+
 /* Views */
 .view { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .view-head { display: flex; align-items: center; gap: 12px; padding: 6px 22px 10px; position: sticky; top: 0; background: var(--panel); z-index: 2; }
@@ -255,6 +266,8 @@ h2 { font: 400 25px/1.15 var(--display); margin: 0; text-wrap: balance; }
 .pin svg { transform: rotate(45deg); width: 16px; height: 16px; color: #fff; stroke-width: 2.3; }
 .pin:hover { transform: rotate(-45deg) scale(1.1); }
 .pin.active { transform: rotate(-45deg) scale(1.3); }
+.pin.want { background: var(--panel); border-color: var(--c); border-width: 3px; box-shadow: 0 3px 8px -1px rgba(30, 45, 20, .35); }
+.pin.want svg { color: var(--c); }
 .pin.draft { --c: var(--ink); border-style: dashed; }
 .pin.dim { opacity: .3; filter: grayscale(.6); }
 .leaflet-tooltip.pin-tip { background: var(--card); color: var(--ink); border: 0; border-radius: 999px; box-shadow: var(--shadow-sm); font: 800 13px var(--body); padding: 5px 12px; }
@@ -285,3 +298,4 @@ h2 { font: 400 25px/1.15 var(--display); margin: 0; text-wrap: balance; }
   .editing .app { grid-template-rows: 32vh 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .pin, .card, .btn, .stars.input button { transition: none; } }
+.tab-want .card .badge { background: color-mix(in srgb, var(--c) 14%, var(--card)); color: var(--c); box-shadow: inset 0 0 0 2px var(--c); }

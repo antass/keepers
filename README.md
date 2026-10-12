@@ -16,10 +16,11 @@
 - **Tags** like `kid-friendly`, `date night`, `rainy day` — then filter by them.
 - **Notes** for what to order, the best table, when it's quiet.
 - **Visit log:** "Log a visit today" in one tap. Cards show how often and how recently you've been.
+- **Been / Want to go:** two lists. Save places to try (hollow pins), then tap **I've been here** to rate it and move it to Been.
 - **Want to go back** flag and filter.
 - **Filter & sort:** search text, type, tags, minimum rating, "in map view", sort by rating / recent / most visited / nearest.
 - **Apple Maps / Google Maps** links on every place.
 - **Backup:** ⋯ menu → Export / Import (.json).
 
 ## Where your data lives
-`data/places.json` in this folder (syncs through iCloud). The previous version is kept as `places.json.bak`.
+`data/places.json` in this folder (syncs through iCloud). Every save also keeps a timestamped copy in `data/backups/` (newest 50), plus `places.json.bak`.

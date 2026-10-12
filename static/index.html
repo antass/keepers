@@ -30,6 +30,10 @@
         </div>
       </div>
       <p class="stats" id="stats"></p>
+      <div class="tabs" role="tablist" aria-label="Collection">
+        <button class="tab" role="tab" id="tab-been" data-tab="been" aria-selected="true">Been <span class="n" id="nBeen"></span></button>
+        <button class="tab" role="tab" id="tab-want" data-tab="want" aria-selected="false">Want to go <span class="n" id="nWant"></span></button>
+      </div>
     </header>
 
     <!-- LIST VIEW -->
@@ -48,11 +52,12 @@
               <option value="rating">Top rated</option>
               <option value="recent">Recently visited</option>
               <option value="visits">Most visited</option>
+              <option value="added">Recently added</option>
               <option value="name">A–Z</option>
               <option value="near">Nearest to map center</option>
             </select>
           </label>
-          <label class="select">
+          <label class="select been-only">
             <span>Rating</span>
             <select id="minRating">
               <option value="0">Any</option>
@@ -61,7 +66,7 @@
               <option value="5">5★ only</option>
             </select>
           </label>
-          <button class="toggle" id="returnOnly" aria-pressed="false">Want to go back</button>
+          <button class="toggle been-only" id="returnOnly" aria-pressed="false">Want to go back</button>
           <button class="toggle" id="inView" aria-pressed="false">In map view</button>
         </div>
       </div>
@@ -90,6 +95,13 @@
         </div>
 
         <div class="field">
+          <span class="lbl">List</span>
+          <div class="tabs status" id="f-status" role="radiogroup" aria-label="List">
+            <button type="button" class="tab" role="radio" data-setstatus="been">I've been here</button>
+            <button type="button" class="tab" role="radio" data-setstatus="want">Want to go</button>
+          </div>
+        </div>
+        <div class="field">
           <label for="f-name" class="lbl">Name</label>
           <input id="f-name" required maxlength="120">
         </div>
@@ -98,7 +110,7 @@
           <div class="chips" id="f-cats" role="radiogroup" aria-label="Type"></div>
         </div>
         <div class="field two">
-          <div>
+          <div class="been-only">
             <span class="lbl">Rating</span>
             <div class="stars input" id="f-rating" role="radiogroup" aria-label="Rating"></div>
           </div>
@@ -125,7 +137,7 @@
           <label for="f-notes" class="lbl">Notes</label>
           <textarea id="f-notes" rows="5" placeholder="What to order, best table, who you went with, when it's quiet…"></textarea>
         </div>
-        <div class="field">
+        <div class="field been-only">
           <span class="lbl">Visits</span>
           <div class="visits-edit" id="f-visits"></div>
           <div class="add-visit">
@@ -133,7 +145,7 @@
             <button type="button" class="btn ghost" id="f-add-visit">Add visit</button>
           </div>
         </div>
-        <label class="check">
+        <label class="check been-only">
           <input type="checkbox" id="f-return"> I want to go back
         </label>
         <p class="form-error" id="formError" role="alert"></p>

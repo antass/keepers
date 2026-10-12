@@ -33,7 +33,11 @@
 
   // ---------- State ----------
   let places = [];
-  const f = { q: "", cats: new Set(), tags: new Set(), minRating: 0, returnOnly: false, inView: false, sort: "rating" };
+  const f = { tab: "been", q: "", cats: new Set(), tags: new Set(), minRating: 0, returnOnly: false, inView: false, sort: "rating" };
+  const sortBy = { been: "rating", want: "added" };
+  const isWant = (p) => p.status === "want";
+  const inTab = (p) => isWant(p) === (f.tab === "want");
+  const dayOf = (ms) => { const d = new Date(ms); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
   let selectedId = null;
   let draft = null;        // place being added/edited
   let view = "list";
@@ -95,7 +99,8 @@
     for (const [id, m] of markers) if (!places.some((p) => p.id === id)) { map.removeLayer(m); markers.delete(id); }
     for (const p of places) {
       let m = markers.get(p.id);
-      const cls = [p.id === selectedId ? "active" : "", ids.has(p.id) ? "" : "dim"].join(" ");
+      if (!inTab(p)) { if (m) { map.removeLayer(m); markers.delete(p.id); } continue; }
+      const cls = [p.id === selectedId ? "active" : "", ids.has(p.id) ? "" : "dim", isWant(p) ? "want" : ""].join(" ");
       if (!m) {
         m = L.marker([p.lat, p.lon], { icon: pinIcon(p.category, cls), riseOnHover: true }).addTo(map);
         m.bindTooltip("", { className: "pin-tip", direction: "top" });
@@ -129,11 +134,13 @@
   function filtered() {
     const q = f.q.trim().toLowerCase();
     const bounds = f.inView ? map.getBounds() : null;
+    const want = f.tab === "want";
     let list = places.filter((p) => {
+      if (!inTab(p)) return false;
       if (f.cats.size && !f.cats.has(p.category)) return false;
       if (f.tags.size && ![...f.tags].every((t) => (p.tags || []).includes(t))) return false;
-      if (f.minRating && (p.rating || 0) < f.minRating) return false;
-      if (f.returnOnly && !p.wantToReturn) return false;
+      if (!want && f.minRating && (p.rating || 0) < f.minRating) return false;
+      if (!want && f.returnOnly && !p.wantToReturn) return false;
       if (bounds && !bounds.contains([p.lat, p.lon])) return false;
       if (q) {
         const hay = [p.name, p.address, p.city, p.notes, (p.tags || []).join(" "), CATS[p.category]?.label].join(" ").toLowerCase();
@@ -147,6 +154,7 @@
       rating: (a, b) => (b.rating || 0) - (a.rating || 0) || lastVisit(b).localeCompare(lastVisit(a)),
       recent: (a, b) => lastVisit(b).localeCompare(lastVisit(a)) || (b.created || 0) - (a.created || 0),
       visits: (a, b) => (b.visits?.length || 0) - (a.visits?.length || 0),
+      added: (a, b) => (b.created || 0) - (a.created || 0),
       name: (a, b) => a.name.localeCompare(b.name),
       near: (a, b) => dist(a) - dist(b),
     };
@@ -155,30 +163,40 @@
 
   // ---------- Render: list ----------
   function renderStats() {
-    const n = places.length;
-    if (!n) { $("#stats").textContent = "Your favorite places, on one map."; return; }
-    const cities = new Set(places.map((p) => p.city).filter(Boolean)).size;
-    const rated = places.filter((p) => p.rating);
+    const been = places.filter((p) => !isWant(p)), wantN = places.length - been.length;
+    $("#nBeen").textContent = been.length || "";
+    $("#nWant").textContent = wantN || "";
+    for (const t of ["been", "want"]) $("#tab-" + t).setAttribute("aria-selected", f.tab === t);
+    document.body.classList.toggle("tab-want", f.tab === "want");
+    if (!places.length) { $("#stats").textContent = "Your favorite places, on one map."; return; }
+    const cities = new Set(been.map((p) => p.city).filter(Boolean)).size;
+    const rated = been.filter((p) => p.rating);
     const avg = rated.length ? (rated.reduce((s, p) => s + p.rating, 0) / rated.length).toFixed(1) : "–";
-    const visits = places.reduce((s, p) => s + (p.visits?.length || 0), 0);
-    $("#stats").textContent = `${n} place${n === 1 ? "" : "s"} · ${cities || 1} cit${cities === 1 ? "y" : "ies"} · ${visits} visits · avg ${avg}★`;
+    const visits = been.reduce((s, p) => s + (p.visits?.length || 0), 0);
+    $("#stats").textContent = been.length
+      ? `${cities || 1} cit${cities === 1 ? "y" : "ies"} · ${visits} visit${visits === 1 ? "" : "s"} · avg ${avg}★`
+      : "Nothing in Been yet.";
   }
 
   function renderFilters() {
+    const pool = places.filter(inTab);
     const counts = {};
-    places.forEach((p) => (counts[p.category] = (counts[p.category] || 0) + 1));
+    for (const k of [...f.cats]) if (!pool.some((p) => p.category === k)) f.cats.delete(k);
+    pool.forEach((p) => (counts[p.category] = (counts[p.category] || 0) + 1));
     const used = Object.keys(CATS).filter((k) => counts[k]);
     $("#catChips").innerHTML = used.map((k) =>
       `<button class="chip" data-cat="${k}" aria-pressed="${f.cats.has(k)}" style="--c:${CATS[k].color}">${iconSvg(k)}${CATS[k].label}<span class="n">${counts[k]}</span></button>`
     ).join("");
     const tagCounts = {};
-    places.forEach((p) => (p.tags || []).forEach((t) => (tagCounts[t] = (tagCounts[t] || 0) + 1)));
+    pool.forEach((p) => (p.tags || []).forEach((t) => (tagCounts[t] = (tagCounts[t] || 0) + 1)));
     const tags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b));
     for (const t of [...f.tags]) if (!tagCounts[t]) f.tags.delete(t);
     $("#tagChips").innerHTML = tags.map((t) =>
       `<button class="chip" data-tag="${esc(t)}" aria-pressed="${f.tags.has(t)}">#${esc(t)}<span class="n">${tagCounts[t]}</span></button>`
     ).join("");
     $("#returnOnly").setAttribute("aria-pressed", f.returnOnly);
+    $("#sort").value = f.sort;
+    for (const o of $("#sort").options) o.hidden = f.tab === "want" && ["rating", "recent", "visits"].includes(o.value);
     $("#inView").setAttribute("aria-pressed", f.inView);
   }
 
@@ -191,13 +209,13 @@
         <div class="badge" style="--c:${CATS[p.category]?.color}">${iconSvg(p.category)}</div>
         <div class="card-main">
           <p class="card-name">${esc(p.name)}</p>
-          <div class="card-meta">${esc(meta)}${lv ? ` · ${ago(lv)}` : ""}</div>
+          <div class="card-meta">${esc(meta)}${isWant(p) ? (p.created ? ` · added ${ago(dayOf(p.created))}` : "") : lv ? ` · ${ago(lv)}` : ""}</div>
           ${p.tags?.length ? `<div class="card-tags">${p.tags.slice(0, 4).map((t) => `<span class="tag">#${esc(t)}</span>`).join("")}</div>` : ""}
         </div>
         <div class="card-side">
-          ${p.rating ? stars(p.rating) : ""}
+          ${!isWant(p) && p.rating ? stars(p.rating) : ""}
           ${n ? `<span class="tally" title="${n} visit${n === 1 ? "" : "s"}">${n}× visited</span>` : ""}
-          ${p.wantToReturn ? `<span class="return-flag">Go back</span>` : ""}
+          ${!isWant(p) && p.wantToReturn ? `<span class="return-flag">Go back</span>` : ""}
         </div>
       </li>`;
     }).join("");
@@ -207,6 +225,11 @@
       empty.innerHTML = `<h3>Start your map</h3>
         <p>Add a restaurant, café, museum or bookstore you love. Rate it, tag it, and jot down what to order next time.</p>
         <div class="row"><button class="btn primary" id="emptyAdd">Add your first place</button></div>`;
+    } else if (!places.some(inTab)) {
+      empty.hidden = false;
+      empty.innerHTML = f.tab === "want"
+        ? `<h3>Your want-to-go list</h3><p>Save places friends recommend or you spot online. When you go, tap "I've been here" and rate it.</p><div class="row"><button class="btn primary" id="emptyAdd">Add a place to try</button></div>`
+        : `<h3>Nothing in Been yet</h3><p>Add a place you've visited, or open one from Want to go and tap "I've been here".</p><div class="row"><button class="btn primary" id="emptyAdd">Add a place you've been</button></div>`;
     } else if (!list.length) {
       empty.hidden = false;
       empty.innerHTML = `<h3>Nothing matches</h3><p>No places fit these filters.</p><div class="row"><button class="btn ghost" id="clearFilters">Clear filters</button></div>`;
@@ -240,8 +263,9 @@
           </div>
         </div>
         <div class="rating-line">
-          ${p.rating ? stars(p.rating) : `<span class="price-txt">Not rated yet</span>`}
-          ${p.wantToReturn ? `<span class="return-flag">Want to go back</span>` : ""}
+          ${isWant(p)
+            ? `<span class="want-flag">Want to go</span>${p.created ? `<span class="price-txt">on your list since ${fmtDate(dayOf(p.created))}</span>` : ""}`
+            : `${p.rating ? stars(p.rating) : `<span class="price-txt">Not rated yet</span>`}${p.wantToReturn ? `<span class="return-flag">Want to go back</span>` : ""}`}
         </div>
         ${p.tags?.length ? `<div class="card-tags">${p.tags.map((t) => `<button class="tag chip-link" data-tagjump="${esc(t)}" style="border:0;cursor:pointer">#${esc(t)}</button>`).join("")}</div>` : ""}
         <div>
@@ -257,12 +281,14 @@
             <a href="https://www.google.com/maps/search/?api=1&query=${qName}" target="_blank" rel="noopener">Google Maps</a>
           </div>
         </div>
-        <div>
+        <div ${isWant(p) ? "hidden" : ""}>
           <p class="sec-lbl">Visits · ${visits.length}</p>
           ${visits.length ? `<ul class="visit-log">${visits.map((v) => `<li><span>${fmtDate(v)}</span><span>${ago(v)}</span></li>`).join("")}</ul>` : `<p class="price-txt">No visits logged.</p>`}
         </div>
         <div class="detail-actions">
-          <button class="btn primary" id="logVisit">${visits[0] === today() ? "Visited today ✓" : "Log a visit today"}</button>
+          ${isWant(p)
+            ? `<button class="btn primary" id="markBeen">I've been here</button>`
+            : `<button class="btn primary" id="logVisit">${visits[0] === today() ? "Visited today ✓" : "Log a visit today"}</button>`}
           <button class="btn ghost" id="editBtn">Edit</button>
         </div>
       </div>`;
@@ -296,10 +322,14 @@
   }
 
   // ---------- Editor ----------
-  function openEditor(p) {
-    draft = p ? JSON.parse(JSON.stringify(p)) : { id: null, name: "", category: "restaurant", rating: 0, price: 0, address: "", city: "", lat: null, lon: null, tags: [], notes: "", visits: [today()], wantToReturn: false };
-    $("#editTitle").textContent = p ? "Edit place" : "Add a place";
-    $("#finder").hidden = false;
+  function openEditor(p, opts = {}) {
+    const want = f.tab === "want";
+    draft = p ? JSON.parse(JSON.stringify(p)) : { id: null, status: want ? "want" : "been", name: "", category: "restaurant", rating: 0, price: 0, address: "", city: "", lat: null, lon: null, tags: [], notes: "", visits: want ? [] : [today()], wantToReturn: false };
+    draft.status = draft.status || "been";
+    draft.visits = draft.visits || [];
+    if (opts.markBeen) { draft.status = "been"; if (!draft.visits.includes(today())) draft.visits.push(today()); }
+    $("#editTitle").textContent = opts.markBeen ? "How was it?" : p ? "Edit place" : want ? "Add to want to go" : "Add a place you've been";
+    $("#finder").hidden = !!opts.markBeen;
     $("#lookup").value = "";
     $("#results").innerHTML = "";
     $("#f-name").value = draft.name;
@@ -312,11 +342,16 @@
     $("#confirmDelete").hidden = true;
     renderEditBits();
     show("edit");
+    if (opts.markBeen) setTimeout(() => $("#f-rating").scrollIntoView({ block: "center", behavior: "smooth" }), 80);
     if (draft.lat != null) placeDraftMarker(draft.lat, draft.lon, false);
     if (!p) setTimeout(() => $("#lookup").focus(), 60);
   }
 
   function renderEditBits() {
+    const want = draft.status === "want";
+    $("#editForm").classList.toggle("is-want", want);
+    for (const b of $("#f-status").children) b.setAttribute("aria-checked", b.dataset.setstatus === draft.status);
+    $("#f-notes").placeholder = want ? "Who recommended it, what to try, best time to go…" : "What to order, best table, who you went with, when it's quiet…";
     $("#f-cats").innerHTML = Object.entries(CATS).map(([k, c]) =>
       `<button type="button" class="chip" role="radio" data-setcat="${k}" aria-checked="${draft.category === k}" style="--c:${c.color}">${iconSvg(k)}${c.label}</button>`).join("");
     $("#f-rating").innerHTML = [1, 2, 3, 4, 5].map((i) =>
@@ -350,19 +385,20 @@
   function placeDraftMarker(lat, lon, pan = true) {
     draft.lat = lat; draft.lon = lon;
     if (!draftMarker) {
-      draftMarker = L.marker([lat, lon], { draggable: true, icon: pinIcon(draft.category, "active"), zIndexOffset: 2000 }).addTo(map);
+      draftMarker = L.marker([lat, lon], { draggable: true, icon: pinIcon(draft.category, draftCls()), zIndexOffset: 2000 }).addTo(map);
       draftMarker.on("dragend", () => {
         const ll = draftMarker.getLatLng();
         draft.lat = ll.lat; draft.lon = ll.lng;
         renderEditBits();
       });
     } else draftMarker.setLatLng([lat, lon]);
-    draftMarker.setIcon(pinIcon(draft.category, "active"));
+    draftMarker.setIcon(pinIcon(draft.category, draftCls()));
     if (pan) focusOn(lat, lon, Math.max(map.getZoom(), 16));
     $("#pinHint").hidden = true;
     renderEditBits();
     syncMarkers(filtered());
   }
+  const draftCls = () => "active" + (draft?.status === "want" ? " want" : "");
   function clearDraftMarker() {
     if (draftMarker) { map.removeLayer(draftMarker); draftMarker = null; }
   }
@@ -407,7 +443,7 @@
   }
   function setCat(k) {
     draft.category = k;
-    if (draftMarker) draftMarker.setIcon(pinIcon(k, "active"));
+    if (draftMarker) draftMarker.setIcon(pinIcon(k, draftCls()));
     renderEditBits();
   }
 
@@ -421,6 +457,7 @@
     if (!draft.name) { $("#formError").textContent = "Give the place a name."; $("#f-name").focus(); return; }
     if (draft.lat == null) { $("#formError").textContent = "Put it on the map: pick a search result or tap the map."; return; }
     if (!draft.city && draft.address) draft.city = draft.address.split(",").slice(-2, -1)[0]?.trim() || "";
+    if (draft.status === "want") { draft.rating = 0; draft.visits = []; draft.wantToReturn = false; }
     draft.updated = Date.now();
     if (draft.id) {
       const i = places.findIndex((p) => p.id === draft.id);
@@ -431,6 +468,7 @@
       places.push(draft);
     }
     const id = draft.id;
+    if (draft.status !== f.tab) { f.tab = draft.status; f.sort = sortBy[f.tab]; f.cats.clear(); f.tags.clear(); }
     draft = null;
     persist();
     select(id, false);
@@ -448,6 +486,18 @@
     if (d.tag) { f.tags.has(d.tag) ? f.tags.delete(d.tag) : f.tags.add(d.tag); return render(); }
     if (d.tagjump) { f.tags = new Set([d.tagjump]); f.cats.clear(); show("list"); return; }
     if (d.setcat) return setCat(d.setcat);
+    if (d.tab) {
+      if (f.tab === d.tab && view === "list") return;
+      sortBy[f.tab] = f.sort;
+      f.tab = d.tab; f.sort = sortBy[f.tab]; f.cats.clear(); f.tags.clear();
+      show("list"); fitAll(); return;
+    }
+    if (d.setstatus) {
+      draft.status = d.setstatus;
+      if (d.setstatus === "been" && !draft.visits.length) draft.visits.push(today());
+      if (draftMarker) draftMarker.setIcon(pinIcon(draft.category, draftCls()));
+      return renderEditBits();
+    }
     if (d.rate) { draft.rating = draft.rating === +d.rate ? 0 : +d.rate; return renderEditBits(); }
     if (d.price) { draft.price = draft.price === +d.price ? 0 : +d.price; return renderEditBits(); }
     if (d.rmtag) { draft.tags.splice(+d.rmtag, 1); return renderEditBits(); }
@@ -467,6 +517,7 @@
     switch (t.id) {
       case "addBtn": case "emptyAdd": return openEditor(null);
       case "editBtn": return openEditor(places.find((p) => p.id === selectedId));
+      case "markBeen": return openEditor(places.find((p) => p.id === selectedId), { markBeen: true });
       case "logVisit": {
         const p = places.find((x) => x.id === selectedId);
         p.visits = p.visits || [];
@@ -505,7 +556,7 @@
   document.addEventListener("click", (e) => { if (!e.target.closest(".brand-actions")) $("#menu").hidden = true; }, true);
 
   $("#q").addEventListener("input", (e) => { f.q = e.target.value; renderList(); });
-  $("#sort").addEventListener("change", (e) => { f.sort = e.target.value; renderList(); });
+  $("#sort").addEventListener("change", (e) => { f.sort = sortBy[f.tab] = e.target.value; renderList(); });
   $("#minRating").addEventListener("change", (e) => { f.minRating = +e.target.value; renderList(); });
   map.on("moveend", () => { if (f.inView || f.sort === "near") renderList(); });
   map.on("click", (e) => {
