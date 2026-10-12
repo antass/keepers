@@ -548,6 +548,6 @@
       $("#saveState").textContent = "Can't reach Keepers — start it with Keepers.command";
     }
     render();
-    if (places.length) fitAll();
+    if (places.length) fitAll(); else focusOn(42.3601, -71.0589, 13);  // Boston, MA
   })();
 })();
