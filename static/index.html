@@ -26,6 +26,7 @@
           <div class="menu" id="menu" hidden>
             <button id="exportBtn">Export backup (.json)</button>
             <label class="menu-file">Import backup…<input type="file" id="importInput" accept="application/json,.json"></label>
+            <p class="menu-note" id="browserNote" hidden>Your places are saved in this browser only. Export a backup now and then.</p>
           </div>
         </div>
       </div>
@@ -88,7 +89,7 @@
           <label for="lookup" class="lbl">Find it</label>
           <div class="search">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-            <input id="lookup" type="search" placeholder="Name or address, e.g. Myopic Books" autocomplete="off">
+            <input id="lookup" type="search" placeholder="Name or address, e.g. Brattle Book Shop" autocomplete="off">
           </div>
           <p class="hint">Or tap the map to drop a pin. Drag the pin to fine-tune.</p>
           <ul class="results" id="results"></ul>

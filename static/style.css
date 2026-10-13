@@ -82,6 +82,7 @@ h2 { font: 400 25px/1.15 var(--display); margin: 0; text-wrap: balance; }
 .menu button, .menu-file { text-align: left; background: none; border: 0; padding: 10px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .menu button:hover, .menu-file:hover { background: var(--accent-soft); }
 .menu-file input { display: none; }
+.menu-note { margin: 4px 12px 8px; font-size: 12px; color: var(--muted); max-width: 26ch; }
 
 .icon-btn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; border: 0; background: var(--sunk); color: var(--ink); }
 .icon-btn:hover { background: var(--accent-soft); color: var(--accent-deep); }
@@ -103,7 +104,7 @@ h2 { font: 400 25px/1.15 var(--display); margin: 0; text-wrap: balance; }
 /* Views */
 .view { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .view-head { display: flex; align-items: center; gap: 12px; padding: 6px 22px 10px; position: sticky; top: 0; background: var(--panel); z-index: 2; }
-.back { background: var(--sunk); border: 0; color: var(--accent-deep); font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px; }
+.back { flex: none; white-space: nowrap; background: var(--sunk); border: 0; color: var(--accent-deep); font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px; }
 .back:hover { background: var(--accent-soft); }
 
 /* Filters */

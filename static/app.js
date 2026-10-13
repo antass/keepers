@@ -64,13 +64,25 @@
   const price = (n) => n ? "$".repeat(n) : "";
 
   // ---------- Persistence ----------
+  // "server": the local Keepers server (data/places.json). "browser": hosted copy (e.g. GitHub Pages) — localStorage only.
+  let mode = "server";
+  const LS_KEY = "keepers.places.v1";
   let saveTimer = null;
   function persist() {
+    if (mode === "browser") {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({ version: 1, places }));
+        $("#saveState").textContent = "Saved in this browser";
+      } catch {
+        $("#saveState").textContent = "Not saved — this browser blocks storage";
+      }
+      return;
+    }
     $("#saveState").textContent = "Saving…";
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        const r = await fetch("/api/places", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version: 1, places }) });
+        const r = await fetch("api/places", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version: 1, places }) });
         if (!r.ok) throw new Error();
         $("#saveState").textContent = "Saved";
         setTimeout(() => { if ($("#saveState").textContent === "Saved") $("#saveState").textContent = ""; }, 1800);
@@ -171,10 +183,10 @@
     if (!places.length) { $("#stats").textContent = "Your favorite places, on one map."; return; }
     const cities = new Set(been.map((p) => p.city).filter(Boolean)).size;
     const rated = been.filter((p) => p.rating);
-    const avg = rated.length ? (rated.reduce((s, p) => s + p.rating, 0) / rated.length).toFixed(1) : "–";
+    const avg = rated.length ? (rated.reduce((s, p) => s + p.rating, 0) / rated.length).toFixed(1) : "";
     const visits = been.reduce((s, p) => s + (p.visits?.length || 0), 0);
     $("#stats").textContent = been.length
-      ? `${cities || 1} cit${cities === 1 ? "y" : "ies"} · ${visits} visit${visits === 1 ? "" : "s"} · avg ${avg}★`
+      ? `${cities || 1} cit${cities === 1 ? "y" : "ies"} · ${visits} visit${visits === 1 ? "" : "s"}${avg ? ` · avg ${avg}★` : ""}`
       : "Nothing in Been yet.";
   }
 
@@ -418,7 +430,7 @@
     box.innerHTML = `<li class="msg">Searching…</li>`;
     try {
       const c = map.getCenter();
-      const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&lat=${c.lat.toFixed(4)}&lon=${c.lng.toFixed(4)}`);
+      const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en&lat=${c.lat.toFixed(4)}&lon=${c.lng.toFixed(4)}`);
       const data = await r.json();
       if (seq !== lookupSeq) return;
       if (data.error) throw new Error(data.error);
@@ -432,7 +444,7 @@
   }
   async function reverse(lat, lon) {
     try {
-      const r = await fetch(`/api/reverse?lat=${lat}&lon=${lon}`);
+      const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&limit=1&lang=en`);
       const ft = (await r.json()).features?.[0];
       if (!ft || !draft) return;
       const x = fmtFeature(ft);
@@ -593,10 +605,13 @@
   // ---------- Boot ----------
   (async () => {
     try {
-      const r = await fetch("/api/places");
+      const r = await fetch("api/places", { cache: "no-store" });
+      if (!r.ok) throw new Error();
       places = (await r.json()).places || [];
     } catch {
-      $("#saveState").textContent = "Can't reach Keepers — start it with Keepers.command";
+      mode = "browser";
+      try { places = JSON.parse(localStorage.getItem(LS_KEY) || "{}").places || []; } catch { places = []; }
+      $("#browserNote").hidden = false;
     }
     render();
     if (places.length) fitAll(); else focusOn(42.3601, -71.0589, 13);  // Boston, MA

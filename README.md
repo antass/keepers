@@ -5,7 +5,9 @@
   <img alt="Keepers: a list of favorite Boston places with ratings and tags beside a map of color-coded pins" src="docs/screenshot.png">
 </picture>
 
-**Start it:** double-click `Keepers.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
+**Try it online:** https://antass.github.io/keepers/ (no install). The online version saves your places in that browser only, so use ⋯ → Export backup now and then.
+
+**Run it on your Mac (saves to a file):** double-click `Keepers.command`. Your browser opens at http://localhost:8142. Keep that Terminal window open while you use it.
 
 **On your phone:** same Wi-Fi, open the address the Terminal window prints (e.g. `http://<your-mac>.local:8142`), then Share → Add to Home Screen.
 
